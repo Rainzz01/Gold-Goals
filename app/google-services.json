@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "601738361902",
+    "project_id": "rpgtodoapp-8e638",
+    "storage_bucket": "rpgtodoapp-8e638.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601738361902:android:794146c67a17d6f0c333bf",
+        "android_client_info": {
+          "package_name": "com.example.rpgtodolist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3zduH2YCEhRrqtdh_Wre6BNgQ7_kLJYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
