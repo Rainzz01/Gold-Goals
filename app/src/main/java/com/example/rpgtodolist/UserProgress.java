@@ -7,7 +7,6 @@ public class UserProgress {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
-
     private int xp;      // 经验值
     private int coins;   // 金币数
 

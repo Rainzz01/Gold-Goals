@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 同步任务到 Firebase
         syncTasksToFirebase();
+        syncUserProgressToFirebase();
     }
 
     private void addSampleData() {
@@ -102,6 +103,20 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("MainActivity", "Error checking task " + taskId + ": " + taskSnapshot.getException().getMessage());
                 }
             });
+        }
+    }
+
+    private void syncUserProgressToFirebase() {
+        UserProgress userProgress = db.userProgressDao().getUserProgressById(1);
+        if (userProgress != null) {
+            databaseReference.child("userProgress").setValue(userProgress)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d("MainActivity", "User progress uploaded successfully!");
+                        } else {
+                            Log.d("MainActivity", "User progress upload failed.", task.getException());
+                        }
+                    });
         }
     }
 
