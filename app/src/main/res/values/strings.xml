@@ -1,3 +1,32 @@
 <resources>
-    <string name="app_name">RPGToDoList</string>
+    <string name="app_name">Gold and Goals</string>
+
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_status">Status</string>
+    <string name="nav_shop">Shop</string>
+    <string name="nav_personal">Personal</string>
+
+
+    <string name="difficulties">⚔️</string>
+    <string name="exp_icon">📊</string>
+    <string name="coin_icon">💰 </string>
+    <string name="easy">🟢</string>
+    <string name="medium">🟡</string>
+    <string name="hard">🔴</string>
+    <string name="extreme">🟣</string>
+
+    <string-array name="difficulty_levels">
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Hard</item>
+        <item>Extreme</item>
+    </string-array>
+
+    <string-array name="task_types">
+        <item>Normal</item>
+        <item>Repeat</item>
+    </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

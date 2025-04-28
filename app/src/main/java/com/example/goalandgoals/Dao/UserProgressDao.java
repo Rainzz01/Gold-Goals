@@ -1,8 +1,10 @@
-package com.example.rpgtodolist;
+package com.example.goalandgoals.Dao;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
+
+import com.example.goalandgoals.Model.UserProgress;
 
 @Dao
 public interface UserProgressDao {

@@ -1,4 +1,4 @@
-package com.example.rpgtodolist;
+package com.example.goalandgoals;
 
 import android.os.Bundle;
 import android.view.View;
@@ -16,7 +16,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText registerEmailEditText, registerPasswordEditText;
     private Button registerButton;
-    private FirebaseAuth mAuth;  // Firebase Authentication 实例
+    private FirebaseAuth mAuth;  // Firebase Authentication instance
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +28,7 @@ public class RegisterActivity extends AppCompatActivity {
         registerPasswordEditText = findViewById(R.id.registerPasswordEditText);
         registerButton = findViewById(R.id.registerButton);
 
-        mAuth = FirebaseAuth.getInstance(); // 获取 Firebase 实例
+        mAuth = FirebaseAuth.getInstance(); // get firebase instance
 
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -37,7 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
                 String password = registerPasswordEditText.getText().toString().trim();
 
                 if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(RegisterActivity.this, "请输入邮箱和密码", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "The email and password shouldn't be empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -48,11 +48,11 @@ public class RegisterActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
                                     // 注册成功
-                                    Toast.makeText(RegisterActivity.this, "注册成功！请返回登录", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(RegisterActivity.this, "Register successfully! Please login now!", Toast.LENGTH_SHORT).show();
                                     finish(); // 结束注册页面，回到登录页面
                                 } else {
                                     // 注册失败
-                                    Toast.makeText(RegisterActivity.this, "注册失败：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(RegisterActivity.this, "Register fail：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             }
                         });

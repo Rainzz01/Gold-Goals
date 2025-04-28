@@ -1,4 +1,4 @@
-package com.example.rpgtodolist;
+package com.example.goalandgoals.Model;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -7,8 +7,9 @@ public class UserProgress {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
-    private int xp;      // 经验值
-    private int coins;   // 金币数
+    private int xp;
+    private int coins;
+    private String Name;
 
     // Constructor
     public UserProgress(int xp, int coins) {
@@ -39,5 +40,13 @@ public class UserProgress {
 
     public void setCoins(int coins) {
         this.coins = coins;
+    }
+
+    public String getName() {
+        return Name;
+    }
+
+    public void setName(String name) {
+        Name = name;
     }
 }

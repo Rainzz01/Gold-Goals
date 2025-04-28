@@ -1,4 +1,4 @@
-package com.example.rpgtodolist;
+package com.example.goalandgoals;
 
 import org.junit.Test;
 

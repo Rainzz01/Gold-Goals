@@ -1,4 +1,4 @@
-package com.example.rpgtodolist;
+package com.example.goalandgoals;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -42,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString().trim();
 
                 if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(LoginActivity.this, "请输入邮箱和密码", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Please input email and password", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -51,13 +51,13 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    // 登录成功！跳转去 MainActivity
-                                    Toast.makeText(LoginActivity.this, "登录成功！", Toast.LENGTH_SHORT).show();
+                                    // login success, redirect to MainActivity
+                                    Toast.makeText(LoginActivity.this, "Login Successful！", Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
-                                    finish(); // 结束当前的 LoginActivity
+                                    finish(); // end current LoginActivity
                                 } else {
-                                    Toast.makeText(LoginActivity.this, "登录失败：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(LoginActivity.this, "Login Error：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             }
                         });
@@ -68,13 +68,12 @@ public class LoginActivity extends AppCompatActivity {
         goToRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 跳去注册页面
+                // redirect to register page
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
             }
         });
 
     }
-
 
     private void signInUser(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)

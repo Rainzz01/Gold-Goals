@@ -5,5 +5,9 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.RPGToDoList" parent="Base.Theme.RPGToDoList" />
+    <style name="Theme.RPGToDoList" parent="Base.Theme.RPGToDoList">
+        <item name="android:windowSplashScreenAnimatedIcon" tools:ignore="NewApi">@drawable/logo</item>
+        <item name="android:windowSplashScreenBackground" tools:ignore="NewApi">@android:color/white</item>
+    </style>
+
 </resources>
