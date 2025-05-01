@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@color/background"
+    android:padding="24dp">
+
+    <!-- 阶段标题 -->
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="28sp"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:text="Pomodoro"/>
+
+    <!-- 阶段副标题 -->
+    <TextView
+        android:id="@+id/tv_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="32dp"
+        android:text="Time to Focus"/>
+
+    <!-- 计时器显示 -->
+    <TextView
+        android:id="@+id/timer_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="64sp"
+        android:textColor="@color/work_primary"
+        android:text="25:00"/>
+
+    <!-- 操作按钮 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="48dp">
+
+        <Button
+            android:id="@+id/btn_start_pause"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Start"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/work_primary"
+            android:layout_marginEnd="16dp"
+            app:cornerRadius="24dp"
+            style="@style/Widget.MaterialComponents.Button"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_skip"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Skip"
+            android:textColor="@color/work_primary"
+            android:backgroundTint="@color/button_secondary"
+            app:strokeColor="@color/work_primary"
+            app:strokeWidth="2dp"
+            app:cornerRadius="24dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+    </LinearLayout>
+
+</LinearLayout>
