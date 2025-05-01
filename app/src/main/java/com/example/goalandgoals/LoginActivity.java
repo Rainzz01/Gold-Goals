@@ -65,16 +65,16 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    // 1. 清空本地 Room
+                                    // Clear the local room
                                     new Thread(() -> {
                                         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                                         db.userProgressDao().deleteAll();
-                                        db.toDoDao().deleteAllTasks(); // 确保 ToDoDao 有 deleteAllTasks()
+                                        db.toDoDao().deleteAllTasks(); // make sure ToDoDao have deleteAllTasks()
                                     }).start();
                                     // login success, redirect to MainActivity
                                     Toast.makeText(LoginActivity.this, "Login Successful！", Toast.LENGTH_SHORT).show();
-                                    syncUserProgressFromFirebase(); // 👈 同步 progress
-                                    syncTasksFromFirebase();         // 👈 同步 tasks
+                                    syncUserProgressFromFirebase(); //  sync progress
+                                    syncTasksFromFirebase();         //  sync tasks
                                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                                     finish(); // end current LoginActivity
                                 } else {
@@ -169,7 +169,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void tryStartMainActivity() {
-        // 等待 progress 和 tasks 都同步完才进入 MainActivity
+        // Wait for progress and tasks to be synchronized before entering MainActivity
         if (tasksSynced && progressSynced) {
             runOnUiThread(() -> {
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));

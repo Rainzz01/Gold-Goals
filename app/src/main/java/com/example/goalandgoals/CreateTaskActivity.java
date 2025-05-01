@@ -291,7 +291,7 @@ public class CreateTaskActivity extends AppCompatActivity {
                 updatedTask.setId(id);
                 updatedTask.setTask(taskName);
                 updatedTask.setDescription(description);
-                updatedTask.setStatus(0); // 这里要根据实际设置
+                updatedTask.setStatus(0);
                 updatedTask.setDifficulty(difficulty);
                 updatedTask.setStartTime(startTime);
                 updatedTask.setDeadline(deadline);
@@ -323,7 +323,7 @@ public class CreateTaskActivity extends AppCompatActivity {
         if (user != null) {
             String uid = user.getUid();
 
-            // ⚡ 用你的 Realtime Database 完整 URL！
+            //  Realtime Database URL
             FirebaseDatabase database = FirebaseDatabase.getInstance("https://rpgtodoapp-8e638-default-rtdb.asia-southeast1.firebasedatabase.app/");
 
             DatabaseReference tasksRef = database.getReference("users")

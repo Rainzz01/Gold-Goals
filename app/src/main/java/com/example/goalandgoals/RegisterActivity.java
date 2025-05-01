@@ -44,20 +44,20 @@ public class RegisterActivity extends AppCompatActivity {
                     return;
                 }
 
-                // 用 Firebase 注册
+                // use Firebase register
                 mAuth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    // 注册成功
+                                    // Registration successful
                                     Toast.makeText(RegisterActivity.this, "Register successfully! Please login now!", Toast.LENGTH_SHORT).show();
                                     String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                                     Log.d("Register", "New user UID: " + uid);
 
-                                    finish(); // 结束注册页面，回到登录页面
+                                    finish(); // End the registration page and return to the login page
                                 } else {
-                                    // 注册失败
+                                    // Registration failed
                                     Toast.makeText(RegisterActivity.this, "Register fail：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             }
