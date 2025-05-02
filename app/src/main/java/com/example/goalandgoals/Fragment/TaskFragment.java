@@ -80,16 +80,16 @@ public class TaskFragment extends Fragment {
         TextView userExpTextView = view.findViewById(R.id.userExpTextView);
         TextView userCoinsTextView = view.findViewById(R.id.userCoinsTextView);
 
-        // ⭐ 先取 Firebase UID
+        //  get Firebase UID
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             String uid = currentUser.getUid();
-            userIdTextView.setText("UID: " + uid);  // 直接先显示 UID
+            userIdTextView.setText("UID: " + uid);
         } else {
             userIdTextView.setText("UID: Unknown");
         }
 
-        // 再去本地 Room 拿 XP / Coins
+        // Go to the local Room to get XP/Coins
         AsyncTask.execute(() -> {
             AppDatabase db = AppDatabase.getInstance(requireContext());
             UserProgress userProgress = db.userProgressDao().getUserProgressById(1);

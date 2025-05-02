@@ -19,5 +19,5 @@ public interface UserProgressDao {
     UserProgress getUserProgressById(int id);
 
     @Query("DELETE FROM user_progress")
-    void deleteAll();  // 可选：比如重置玩家数据
+    void deleteAll();  // Optional: For example, reset player data
 }
