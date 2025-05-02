@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity(tableName = "todo")
 public class ToDoModel {
     @PrimaryKey(autoGenerate = true)
@@ -48,7 +50,7 @@ public class ToDoModel {
     @ColumnInfo(name = "repeat_count")
     private int repeatCount = 1;
 
-    private String firebaseKey; // Added to store Firebase reference key
+    private String firebaseKey;
 
     // Getters and Setters
     public int getId() {
@@ -169,5 +171,23 @@ public class ToDoModel {
 
     public void setFirebaseKey(String firebaseKey) {
         this.firebaseKey = firebaseKey;
+    }
+
+    @Override
+    public String toString() {
+        return "ToDoModel{id=" + id + ", task=" + task + ", status=" + status + ", firebaseKey=" + firebaseKey + "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ToDoModel toDoModel = (ToDoModel) o;
+        return id == toDoModel.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

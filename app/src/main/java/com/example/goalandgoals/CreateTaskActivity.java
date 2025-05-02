@@ -256,23 +256,23 @@ public class CreateTaskActivity extends AppCompatActivity {
         int expPenalty = (int) (expReward * penaltyMultiplier);
         int coinPenalty = (int) (coinReward * penaltyMultiplier);
 
+        ToDoModel task = new ToDoModel();
+        task.setTask(taskName);
+        task.setDescription(description);
+        task.setStatus(0);
+        task.setDifficulty(difficulty);
+        task.setStartTime(startTime);
+        task.setDeadline(deadline);
+        task.setExpReward(expReward);
+        task.setCoinReward(coinReward);
+        task.setExpPenalty(expPenalty);
+        task.setCoinPenalty(coinPenalty);
+        task.setReminderTime(reminderTime);
+        task.setTaskType("Normal");
+        task.setRepeatCount(1);
+
         if (id == -1) {
             // Create new task
-            ToDoModel task = new ToDoModel();
-            task.setTask(taskName);
-            task.setDescription(description);
-            task.setStatus(0);
-            task.setDifficulty(difficulty);
-            task.setStartTime(startTime);
-            task.setDeadline(deadline);
-            task.setExpReward(expReward);
-            task.setCoinReward(coinReward);
-            task.setExpPenalty(expPenalty);
-            task.setCoinPenalty(coinPenalty);
-            task.setReminderTime(reminderTime);
-            task.setTaskType("Normal");
-            task.setRepeatCount(1);
-
             AsyncTask.execute(() -> {
                 db.toDoDao().insertTask(task);
                 syncTaskToFirebase(task);
@@ -284,27 +284,16 @@ public class CreateTaskActivity extends AppCompatActivity {
             });
         } else {
             // Update existing task
+            task.setId(id);
+            // Retrieve existing firebaseKey
             AsyncTask.execute(() -> {
+                ToDoModel existingTask = db.toDoDao().getTaskById(id);
+                if (existingTask != null) {
+                    task.setFirebaseKey(existingTask.getFirebaseKey());
+                }
                 db.toDoDao().updateTask(id, taskName, description, difficulty, startTime, deadline,
                         expReward, coinReward, expPenalty, coinPenalty, reminderTime, "Normal", 1);
-                ToDoModel updatedTask = new ToDoModel();
-                updatedTask.setId(id);
-                updatedTask.setTask(taskName);
-                updatedTask.setDescription(description);
-                updatedTask.setStatus(0);
-                updatedTask.setDifficulty(difficulty);
-                updatedTask.setStartTime(startTime);
-                updatedTask.setDeadline(deadline);
-                updatedTask.setExpReward(expReward);
-                updatedTask.setCoinReward(coinReward);
-                updatedTask.setExpPenalty(expPenalty);
-                updatedTask.setCoinPenalty(coinPenalty);
-                updatedTask.setReminderTime(reminderTime);
-                updatedTask.setTaskType("Normal");
-                updatedTask.setRepeatCount(1);
-
-                syncTaskToFirebase(updatedTask);
-
+                syncTaskToFirebase(task);
                 runOnUiThread(() -> {
                     Toast.makeText(CreateTaskActivity.this, "Task updated", Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
@@ -322,22 +311,34 @@ public class CreateTaskActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String uid = user.getUid();
-
-            //  Realtime Database URL
             FirebaseDatabase database = FirebaseDatabase.getInstance("https://rpgtodoapp-8e638-default-rtdb.asia-southeast1.firebasedatabase.app/");
+            DatabaseReference tasksRef = database.getReference("users").child(uid).child("tasks");
 
-            DatabaseReference tasksRef = database.getReference("users")
-                    .child(uid)
-                    .child("tasks");
-
-
-            tasksRef.push().setValue(task)
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d("FirebaseSync", "Task successfully uploaded: " + task.getTask());
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("FirebaseSync", "Failed to upload task: " + e.getMessage());
-                    });
+            if (task.getFirebaseKey() != null && !task.getFirebaseKey().isEmpty()) {
+                // Update existing task
+                tasksRef.child(task.getFirebaseKey()).setValue(task)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d("FirebaseSync", "Task successfully updated: " + task.getTask());
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("FirebaseSync", "Failed to update task: " + e.getMessage());
+                        });
+            } else {
+                // Create new task
+                String newTaskKey = tasksRef.push().getKey();
+                task.setFirebaseKey(newTaskKey);
+                tasksRef.child(newTaskKey).setValue(task)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d("FirebaseSync", "Task successfully uploaded: " + task.getTask());
+                            // Update local database with firebaseKey
+                            AsyncTask.execute(() -> {
+                                db.toDoDao().updateFirebaseKey(task.getId(), newTaskKey);
+                            });
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("FirebaseSync", "Failed to upload task: " + e.getMessage());
+                        });
+            }
         } else {
             Log.e("FirebaseSync", "User is null, cannot sync to Firebase.");
         }

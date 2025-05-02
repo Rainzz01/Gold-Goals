@@ -23,5 +23,4 @@ public class TaskViewModel extends AndroidViewModel {
     public LiveData<List<ToDoModel>> getTasks() {
         return tasks;
     }
-
 }

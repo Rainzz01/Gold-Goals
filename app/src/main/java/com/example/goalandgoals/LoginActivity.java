@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Model.UserProgress;
@@ -24,6 +26,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton;
     private boolean tasksSynced = false;
     private boolean progressSynced = false;
+    private static final String PREF_MIGRATION_COMPLETED = "migration_completed_";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +78,9 @@ public class LoginActivity extends AppCompatActivity {
                                             Log.e("LoginActivity", "Failed to clear local database: " + e.getMessage());
                                         }
                                     }).start();
-                                    // Login success, sync data
+                                    // Login success, run migration and sync data
                                     Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                                    migrateTasksToIncludeFirebaseKey(); // Run migration
                                     syncUserProgressFromFirebase();
                                     syncTasksFromFirebase();
                                 } else {
@@ -152,7 +157,6 @@ public class LoginActivity extends AppCompatActivity {
                     List<ToDoModel> taskList = new ArrayList<>();
                     for (DataSnapshot taskSnap : snapshot.getChildren()) {
                         ToDoModel task = new ToDoModel();
-                        // Explicitly map all fields to ensure consistency
                         task.setId(taskSnap.child("id").getValue(Integer.class) != null ?
                                 taskSnap.child("id").getValue(Integer.class) : 0);
                         task.setTask(taskSnap.child("task").getValue(String.class));
@@ -175,27 +179,36 @@ public class LoginActivity extends AppCompatActivity {
                                 taskSnap.child("taskType").getValue(String.class) : "Normal");
                         task.setRepeatCount(taskSnap.child("repeatCount").getValue(Integer.class) != null ?
                                 taskSnap.child("repeatCount").getValue(Integer.class) : 1);
-                        // Store Firebase key for reference
                         task.setFirebaseKey(taskSnap.getKey());
                         taskList.add(task);
                     }
                     AsyncTask.execute(() -> {
                         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                         for (ToDoModel task : taskList) {
-                            // Check for duplicates by ID
-                            List<ToDoModel> existingTasks = db.toDoDao().getAllTasks();
-                            boolean exists = false;
-                            for (ToDoModel existingTask : existingTasks) {
-                                if (existingTask.getId() == task.getId()) {
-                                    exists = true;
-                                    break;
-                                }
-                            }
-                            if (!exists) {
+                            ToDoModel existingTask = db.toDoDao().getTaskById(task.getId());
+                            if (existingTask == null) {
                                 db.toDoDao().insertTask(task);
+                            } else {
+                                // Update existing task with Firebase data
+                                db.toDoDao().updateTask(
+                                        task.getId(),
+                                        task.getTask(),
+                                        task.getDescription(),
+                                        task.getDifficulty(),
+                                        task.getStartTime(),
+                                        task.getDeadline(),
+                                        task.getExpReward(),
+                                        task.getCoinReward(),
+                                        task.getExpPenalty(),
+                                        task.getCoinPenalty(),
+                                        task.getReminderTime(),
+                                        task.getTaskType(),
+                                        task.getRepeatCount()
+                                );
+                                db.toDoDao().updateFirebaseKey(task.getId(), task.getFirebaseKey());
                             }
                         }
-                        Log.d("FirebaseSync", "Downloaded " + taskList.size() + " tasks.");
+                        Log.d("FirebaseSync", "Downloaded and synced " + taskList.size() + " tasks.");
                     });
                 } else {
                     Log.d("FirebaseSync", "No tasks found for this user.");
@@ -218,5 +231,59 @@ public class LoginActivity extends AppCompatActivity {
                 finish();
             });
         }
+    }
+
+    private void migrateTasksToIncludeFirebaseKey() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.e("Migration", "No user logged in, skipping migration");
+            return;
+        }
+
+        String uid = user.getUid();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String migrationKey = PREF_MIGRATION_COMPLETED + uid;
+
+        // Check if migration has already been completed for this user
+        if (prefs.getBoolean(migrationKey, false)) {
+            Log.d("Migration", "Migration already completed for user: " + uid);
+            return;
+        }
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://rpgtodoapp-8e638-default-rtdb.asia-southeast1.firebasedatabase.app/");
+        DatabaseReference tasksRef = database.getReference("users").child(uid).child("tasks");
+
+        AsyncTask.execute(() -> {
+            List<ToDoModel> localTasks = AppDatabase.getInstance(getApplicationContext()).toDoDao().getAllTasks();
+            boolean migrationNeeded = false;
+
+            for (ToDoModel task : localTasks) {
+                if (task.getFirebaseKey() == null || task.getFirebaseKey().isEmpty()) {
+                    migrationNeeded = true;
+                    tasksRef.orderByChild("id").equalTo(task.getId()).get().addOnSuccessListener(snapshot -> {
+                        if (snapshot.exists()) {
+                            for (DataSnapshot taskSnap : snapshot.getChildren()) {
+                                String firebaseKey = taskSnap.getKey();
+                                task.setFirebaseKey(firebaseKey);
+                                AppDatabase.getInstance(getApplicationContext()).toDoDao().updateFirebaseKey(task.getId(), firebaseKey);
+                                Log.d("Migration", "Assigned firebaseKey=" + firebaseKey + " to task ID=" + task.getId());
+                            }
+                        } else {
+                            Log.w("Migration", "No Firebase task found for local task ID=" + task.getId());
+                        }
+                    }).addOnFailureListener(e -> {
+                        Log.e("Migration", "Failed to migrate task ID=" + task.getId() + ": " + e.getMessage());
+                    });
+                }
+            }
+
+            if (migrationNeeded) {
+                Log.d("Migration", "Migration completed for user: " + uid);
+                prefs.edit().putBoolean(migrationKey, true).apply();
+            } else {
+                Log.d("Migration", "No tasks needed migration for user: " + uid);
+                prefs.edit().putBoolean(migrationKey, true).apply();
+            }
+        });
     }
 }

@@ -34,4 +34,10 @@ public interface ToDoDao {
     @Query("DELETE FROM todo")
     void deleteAllTasks();
 
+    @Query("UPDATE todo SET firebaseKey = :firebaseKey WHERE id = :id")
+    void updateFirebaseKey(int id, String firebaseKey);
+
+    @Query("SELECT * FROM todo WHERE id = :id LIMIT 1")
+    ToDoModel getTaskById(int id);
+
 }

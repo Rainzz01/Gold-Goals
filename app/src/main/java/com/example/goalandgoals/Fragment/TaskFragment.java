@@ -22,6 +22,7 @@ import com.example.goalandgoals.CreateTaskActivity;
 import com.example.goalandgoals.R;
 import com.example.goalandgoals.RecyclerItemTouchHelper;
 import com.example.goalandgoals.TaskViewModel;
+import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Model.UserProgress;
 import com.example.goalandgoals.Utils.AppDatabase;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,11 +30,16 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 public class TaskFragment extends Fragment {
 
     private static final String TAG = "TaskFragment";
     private ToDoAdapter adapter;
     private TaskViewModel viewModel;
+    private List<ToDoModel> lastTaskList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -55,8 +61,13 @@ public class TaskFragment extends Fragment {
         // Initialize ViewModel and observe tasks
         viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
         viewModel.getTasks().observe(getViewLifecycleOwner(), tasks -> {
-            adapter.setTasks(tasks);
-            Log.d(TAG, "onCreateView: Tasks observed, count=" + (tasks != null ? tasks.size() : 0));
+            if (tasks != null && !isTaskListEqual(tasks, lastTaskList)) {
+                Log.d(TAG, "onCreateView: Updating adapter with new task list: size=" + tasks.size());
+                adapter.setTasks(tasks);
+                lastTaskList = new ArrayList<>(tasks);
+            } else {
+                Log.d(TAG, "onCreateView: Skipping adapter update: task list unchanged");
+            }
             // Update user progress display after tasks change
             loadUserDetails(view);
         });
@@ -75,12 +86,26 @@ public class TaskFragment extends Fragment {
         return view;
     }
 
+    private boolean isTaskListEqual(List<ToDoModel> newList, List<ToDoModel> oldList) {
+        if (newList.size() != oldList.size()) return false;
+        for (int i = 0; i < newList.size(); i++) {
+            ToDoModel newTask = newList.get(i);
+            ToDoModel oldTask = oldList.get(i);
+            if (newTask.getId() != oldTask.getId() ||
+                    newTask.getStatus() != oldTask.getStatus() ||
+                    !Objects.equals(newTask.getTask(), oldTask.getTask())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void loadUserDetails(View view) {
         TextView userIdTextView = view.findViewById(R.id.userIdTextView);
         TextView userExpTextView = view.findViewById(R.id.userExpTextView);
         TextView userCoinsTextView = view.findViewById(R.id.userCoinsTextView);
 
-        //  get Firebase UID
+        // Get Firebase UID
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             String uid = currentUser.getUid();
@@ -89,7 +114,7 @@ public class TaskFragment extends Fragment {
             userIdTextView.setText("UID: Unknown");
         }
 
-        // Go to the local Room to get XP/Coins
+        // Get XP/Coins from local Room database
         AsyncTask.execute(() -> {
             AppDatabase db = AppDatabase.getInstance(requireContext());
             UserProgress userProgress = db.userProgressDao().getUserProgressById(1);
