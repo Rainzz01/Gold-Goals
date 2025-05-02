@@ -48,6 +48,8 @@ public class ToDoModel {
     @ColumnInfo(name = "repeat_count")
     private int repeatCount = 1;
 
+    private String firebaseKey; // Added to store Firebase reference key
+
     // Getters and Setters
     public int getId() {
         return id;
@@ -159,5 +161,13 @@ public class ToDoModel {
 
     public void setRepeatCount(int repeatCount) {
         this.repeatCount = repeatCount;
+    }
+
+    public String getFirebaseKey() {
+        return firebaseKey;
+    }
+
+    public void setFirebaseKey(String firebaseKey) {
+        this.firebaseKey = firebaseKey;
     }
 }

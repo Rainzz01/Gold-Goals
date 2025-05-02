@@ -126,7 +126,6 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         // Set description
         taskHolder.descriptionTextView.setText(item.getDescription() != null ? item.getDescription() : "");
-        Log.d(TAG, "onBindViewHolder: Description set to " + (item.getDescription() != null ? item.getDescription() : "null"));
 
         // Show checkbox and set state without triggering listener
         taskHolder.task.setVisibility(View.VISIBLE);
@@ -139,38 +138,43 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (!isUserInteraction) return; // Ignore non-user interactions
-                int adapterPosition = holder.getAdapterPosition();
-                if (adapterPosition == RecyclerView.NO_POSITION) return; // Prevent invalid position
                 int newStatus = isChecked ? 1 : 0;
+                StringBuilder logBuilder = new StringBuilder();
+                logBuilder.append("Task Check Change Log:\n")
+                        .append("Task ID: ").append(item.getId()).append("\n")
+                        .append("Task Name: ").append(item.getTask()).append("\n")
+                        .append("New Status: ").append(newStatus == 1 ? "Completed" : "Incomplete").append("\n");
+
                 if (!isChecked && item.getStatus() == 1) {
                     // Show confirmation dialog for uncompleting a task
                     AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setTitle("Uncomplete Task");
                     builder.setMessage("Are you sure you want to mark this task as incomplete? This will deduct " + item.getExpReward() + " EXP and " + item.getCoinReward() + " Coins.");
                     builder.setPositiveButton("Confirm", (dialog, which) -> {
+                        logBuilder.append("Action: Confirmed uncomplete\n");
                         AsyncTask.execute(() -> {
                             toDoDao.updateStatus(item.getId(), newStatus);
+                            logBuilder.append("Local DB: Updated status to ").append(newStatus).append("\n");
                             // Deduct rewards from user progress
                             UserProgress progress = userProgressDao.getUserProgressById(1);
                             if (progress != null) {
                                 progress.setXp(Math.max(0, progress.getXp() - item.getExpReward()));
                                 progress.setCoins(Math.max(0, progress.getCoins() - item.getCoinReward()));
                                 userProgressDao.update(progress);
+                                logBuilder.append("Local DB: Deducted XP=").append(item.getExpReward())
+                                        .append(", Coins=").append(item.getCoinReward()).append("\n");
+                            } else {
+                                logBuilder.append("Local DB: No user progress found\n");
                             }
-                            syncTaskToFirebase(item, newStatus);
+                            syncTaskToFirebase(item, newStatus, logBuilder);
                             activity.runOnUiThread(() -> {
-                                // Move task to incomplete list with precise notifications
-                                int completedIndex = adapterPosition - incompleteTasks.size() - 1;
-                                if (completedIndex >= 0 && completedIndex < completedTasks.size()) {
-                                    completedTasks.remove(completedIndex);
-                                    item.setStatus(newStatus);
-                                    incompleteTasks.add(item);
-                                    notifyItemRemoved(adapterPosition);
-                                    notifyItemInserted(incompleteTasks.size() - 1);
-                                    if (completedTasks.isEmpty()) {
-                                        notifyItemRemoved(incompleteTasks.size());
-                                    }
-                                }
+                                // Move task to incomplete list
+                                completedTasks.remove(item);
+                                item.setStatus(newStatus);
+                                incompleteTasks.add(0, item); // Add to top of incomplete tasks
+                                notifyDataSetChanged();
+                                logBuilder.append("UI: Moved task to incomplete list\n");
+                                showDebugDialog("Task Uncompleted", logBuilder.toString());
                             });
                         });
                         Log.d(TAG, "onCheckedChanged: Task ID=" + item.getId() + " marked incomplete");
@@ -178,11 +182,14 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> {
                         // Revert checkbox state
                         taskHolder.task.setChecked(true);
+                        logBuilder.append("Action: Cancelled uncomplete\n");
+                        showDebugDialog("Task Uncomplete Cancelled", logBuilder.toString());
                     });
                     builder.show();
                 } else if (isChecked && item.getStatus() == 0) {
                     AsyncTask.execute(() -> {
                         toDoDao.updateStatus(item.getId(), newStatus);
+                        logBuilder.append("Local DB: Updated status to ").append(newStatus).append("\n");
                         // Add rewards to user progress
                         UserProgress progress = userProgressDao.getUserProgressById(1);
                         if (progress == null) {
@@ -190,27 +197,24 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             progress.setXp(item.getExpReward());
                             progress.setCoins(item.getCoinReward());
                             userProgressDao.insert(progress);
+                            logBuilder.append("Local DB: Created new progress, XP=").append(item.getExpReward())
+                                    .append(", Coins=").append(item.getCoinReward()).append("\n");
                         } else {
                             progress.setXp(progress.getXp() + item.getExpReward());
                             progress.setCoins(progress.getCoins() + item.getCoinReward());
                             userProgressDao.update(progress);
+                            logBuilder.append("Local DB: Added XP=").append(item.getExpReward())
+                                    .append(", Coins=").append(item.getCoinReward()).append("\n");
                         }
-                        syncTaskToFirebase(item, newStatus);
+                        syncTaskToFirebase(item, newStatus, logBuilder);
                         activity.runOnUiThread(() -> {
-                            // Move task to completed list with precise notifications
-                            int incompleteIndex = adapterPosition;
-                            if (incompleteIndex >= 0 && incompleteIndex < incompleteTasks.size()) {
-                                incompleteTasks.remove(incompleteIndex);
-                                item.setStatus(newStatus);
-                                boolean wasEmpty = completedTasks.isEmpty();
-                                completedTasks.add(item);
-                                notifyItemRemoved(adapterPosition);
-                                int newPosition = incompleteTasks.size() + (wasEmpty ? 0 : 1);
-                                notifyItemInserted(newPosition);
-                                if (wasEmpty) {
-                                    notifyItemInserted(incompleteTasks.size());
-                                }
-                            }
+                            // Move task to completed list
+                            incompleteTasks.remove(item);
+                            item.setStatus(newStatus);
+                            completedTasks.add(0, item); // Add to top of completed tasks
+                            notifyDataSetChanged();
+                            logBuilder.append("UI: Moved task to completed list\n");
+                            showDebugDialog("Task Completed", logBuilder.toString());
                         });
                     });
                     Log.d(TAG, "onCheckedChanged: Task ID=" + item.getId() + " marked complete");
@@ -250,28 +254,17 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public void setTasks(List<ToDoModel> todoList) {
-        // Create new lists to avoid modifying during iteration
-        List<ToDoModel> newIncompleteTasks = new ArrayList<>();
-        List<ToDoModel> newCompletedTasks = new ArrayList<>();
+        incompleteTasks.clear();
+        completedTasks.clear();
         if (todoList != null) {
             for (ToDoModel task : todoList) {
-                // Avoid duplicates by checking IDs
-                boolean existsInIncomplete = newIncompleteTasks.stream().anyMatch(t -> t.getId() == task.getId());
-                boolean existsInCompleted = newCompletedTasks.stream().anyMatch(t -> t.getId() == task.getId());
-                if (!existsInIncomplete && !existsInCompleted) {
-                    if (task.getStatus() == 0) {
-                        newIncompleteTasks.add(task);
-                    } else {
-                        newCompletedTasks.add(task);
-                    }
+                if (task.getStatus() == 0) {
+                    incompleteTasks.add(task);
+                } else {
+                    completedTasks.add(task);
                 }
             }
         }
-        // Update lists and notify adapter
-        incompleteTasks.clear();
-        incompleteTasks.addAll(newIncompleteTasks);
-        completedTasks.clear();
-        completedTasks.addAll(newCompletedTasks);
         notifyDataSetChanged();
         Log.d(TAG, "setTasks: Tasks updated, incomplete=" + incompleteTasks.size() + ", completed=" + completedTasks.size());
     }
@@ -287,16 +280,26 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             notifyDataSetChanged(); // Reset swipe
             return;
         }
+        StringBuilder logBuilder = new StringBuilder();
+        logBuilder.append("Task Deletion Log:\n")
+                .append("Task ID: ").append(item.getId()).append("\n")
+                .append("Task Name: ").append(item.getTask()).append("\n");
         AsyncTask.execute(() -> {
             toDoDao.deleteTask(item);
+            logBuilder.append("Local DB: Deleted task\n");
+            deleteTaskFromFirebase(item, logBuilder);
             activity.runOnUiThread(() -> {
                 if (position < incompleteTasks.size()) {
                     incompleteTasks.remove(position);
-                    notifyItemRemoved(position);
+                } else {
+                    completedTasks.remove(position - incompleteTasks.size() - 1);
                 }
+                notifyDataSetChanged();
+                logBuilder.append("UI: Removed task from list\n");
+                showDebugDialog("Task Deleted", logBuilder.toString());
+                Log.d(TAG, "deleteItem: Deleted task at position=" + position);
             });
         });
-        Log.d(TAG, "deleteItem: Deleted task at position=" + position);
     }
 
     public void editItem(int position) {
@@ -328,7 +331,7 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Log.d(TAG, "editItem: Started CreateTaskActivity for task ID=" + item.getId());
     }
 
-    private void syncTaskToFirebase(ToDoModel task, int newStatus) {
+    private void syncTaskToFirebase(ToDoModel task, int newStatus, StringBuilder logBuilder) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String uid = user.getUid();
@@ -339,17 +342,77 @@ public class ToDoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     for (DataSnapshot taskSnap : snapshot.getChildren()) {
                         task.setStatus(newStatus);
                         taskSnap.getRef().setValue(task)
-                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Task status synced to Firebase: ID=" + task.getId()))
-                                .addOnFailureListener(e -> Log.e(TAG, "Failed to sync task status: " + e.getMessage()));
+                                .addOnSuccessListener(aVoid -> {
+                                    logBuilder.append("Firebase: Updated task status to ").append(newStatus).append("\n");
+                                    Log.d(TAG, "Task status synced to Firebase: ID=" + task.getId());
+                                })
+                                .addOnFailureListener(e -> {
+                                    logBuilder.append("Firebase: Failed to update task status - ").append(e.getMessage()).append("\n");
+                                    Log.e(TAG, "Failed to sync task status: " + e.getMessage());
+                                });
                     }
                 } else {
                     // If task doesn't exist in Firebase, create it
-                    tasksRef.push().setValue(task)
-                            .addOnSuccessListener(aVoid -> Log.d(TAG, "New task synced to Firebase: ID=" + task.getId()))
-                            .addOnFailureListener(e -> Log.e(TAG, "Failed to sync new task: " + e.getMessage()));
+                    String newTaskKey = tasksRef.push().getKey();
+                    task.setStatus(newStatus);
+                    tasksRef.child(newTaskKey).setValue(task)
+                            .addOnSuccessListener(aVoid -> {
+                                logBuilder.append("Firebase: Created new task with status ").append(newStatus).append("\n");
+                                Log.d(TAG, "New task synced to Firebase: ID=" + task.getId());
+                            })
+                            .addOnFailureListener(e -> {
+                                logBuilder.append("Firebase: Failed to create new task - ").append(e.getMessage()).append("\n");
+                                Log.e(TAG, "Failed to sync new task: " + e.getMessage());
+                            });
                 }
+            }).addOnFailureListener(e -> {
+                logBuilder.append("Firebase: Failed to query tasks - ").append(e.getMessage()).append("\n");
+                Log.e(TAG, "Failed to query tasks: " + e.getMessage());
             });
+        } else {
+            logBuilder.append("Firebase: No user logged in\n");
+            Log.e(TAG, "No user logged in, cannot sync to Firebase");
         }
+    }
+
+    private void deleteTaskFromFirebase(ToDoModel task, StringBuilder logBuilder) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String uid = user.getUid();
+            FirebaseDatabase database = FirebaseDatabase.getInstance("https://rpgtodoapp-8e638-default-rtdb.asia-southeast1.firebasedatabase.app/");
+            DatabaseReference tasksRef = database.getReference("users").child(uid).child("tasks");
+            tasksRef.orderByChild("id").equalTo(task.getId()).get().addOnSuccessListener(snapshot -> {
+                if (snapshot.exists()) {
+                    for (DataSnapshot taskSnap : snapshot.getChildren()) {
+                        taskSnap.getRef().removeValue()
+                                .addOnSuccessListener(aVoid -> {
+                                    logBuilder.append("Firebase: Deleted task\n");
+                                    Log.d(TAG, "Task deleted from Firebase: ID=" + task.getId());
+                                })
+                                .addOnFailureListener(e -> {
+                                    logBuilder.append("Firebase: Failed to delete task - ").append(e.getMessage()).append("\n");
+                                    Log.e(TAG, "Failed to delete task from Firebase: " + e.getMessage());
+                                });
+                    }
+                } else {
+                    logBuilder.append("Firebase: Task not found\n");
+                }
+            }).addOnFailureListener(e -> {
+                logBuilder.append("Firebase: Failed to query tasks for deletion - ").append(e.getMessage()).append("\n");
+                Log.e(TAG, "Failed to query tasks for deletion: " + e.getMessage());
+            });
+        } else {
+            logBuilder.append("Firebase: No user logged in\n");
+            Log.e(TAG, "No user logged in, cannot delete from Firebase");
+        }
+    }
+
+    private void showDebugDialog(String title, String logMessage) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle(title);
+        builder.setMessage(logMessage);
+        builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 
     public static class TaskViewHolder extends RecyclerView.ViewHolder {

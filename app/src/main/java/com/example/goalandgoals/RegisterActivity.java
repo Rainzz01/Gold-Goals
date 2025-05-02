@@ -25,7 +25,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // 初始化控件
+        // initialize component
         registerEmailEditText = findViewById(R.id.registerEmailEditText);
         registerPasswordEditText = findViewById(R.id.registerPasswordEditText);
         registerButton = findViewById(R.id.registerButton);
@@ -68,7 +68,7 @@ public class RegisterActivity extends AppCompatActivity {
         backToLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish(); // 直接 finish() 回去 Login 页面
+                finish(); //  finish() back to Login
             }
         });
     }

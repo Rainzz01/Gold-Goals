@@ -48,7 +48,6 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.loginButton);
         Button goToRegisterButton = findViewById(R.id.goToRegisterButton);
 
-
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -65,37 +64,36 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    // Clear the local room
+                                    // Clear the local Room database
                                     new Thread(() -> {
-                                        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-                                        db.userProgressDao().deleteAll();
-                                        db.toDoDao().deleteAllTasks(); // make sure ToDoDao have deleteAllTasks()
+                                        try {
+                                            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+                                            db.userProgressDao().deleteAll();
+                                            db.toDoDao().deleteAllTasks();
+                                        } catch (Exception e) {
+                                            Log.e("LoginActivity", "Failed to clear local database: " + e.getMessage());
+                                        }
                                     }).start();
-                                    // login success, redirect to MainActivity
-                                    Toast.makeText(LoginActivity.this, "Login Successful！", Toast.LENGTH_SHORT).show();
-                                    syncUserProgressFromFirebase(); //  sync progress
-                                    syncTasksFromFirebase();         //  sync tasks
-                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                    finish(); // end current LoginActivity
+                                    // Login success, sync data
+                                    Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                                    syncUserProgressFromFirebase();
+                                    syncTasksFromFirebase();
                                 } else {
-                                    Toast.makeText(LoginActivity.this, "Login Error：" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(LoginActivity.this, "Login Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             }
                         });
             }
         });
 
-
         goToRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // redirect to register page
+                // Redirect to register page
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
             }
         });
-
     }
-
 
     private void syncUserProgressFromFirebase() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -123,14 +121,24 @@ public class LoginActivity extends AppCompatActivity {
                         Log.d("FirebaseSync", "Progress: XP=" + finalXp + ", Coins=" + finalCoins);
                     });
                 } else {
-                    Log.d("FirebaseSync", "No progress found for this user.");
+                    // Initialize default progress if none exists
+                    UserProgress userProgress = new UserProgress(1, 0, 0);
+                    AsyncTask.execute(() -> {
+                        AppDatabase.getInstance(getApplicationContext())
+                                .userProgressDao().insert(userProgress);
+                        Log.d("FirebaseSync", "Initialized default progress: XP=0, Coins=0");
+                    });
+                    progressRef.setValue(userProgress);
                 }
+                progressSynced = true;
+                tryStartMainActivity();
+            }).addOnFailureListener(e -> {
+                Log.e("FirebaseSync", "Failed to fetch progress: " + e.getMessage());
                 progressSynced = true;
                 tryStartMainActivity();
             });
         }
     }
-
 
     private void syncTasksFromFirebase() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -143,15 +151,49 @@ public class LoginActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     List<ToDoModel> taskList = new ArrayList<>();
                     for (DataSnapshot taskSnap : snapshot.getChildren()) {
-                        ToDoModel task = taskSnap.getValue(ToDoModel.class);
-                        if (task != null) {
-                            taskList.add(task);
-                        }
+                        ToDoModel task = new ToDoModel();
+                        // Explicitly map all fields to ensure consistency
+                        task.setId(taskSnap.child("id").getValue(Integer.class) != null ?
+                                taskSnap.child("id").getValue(Integer.class) : 0);
+                        task.setTask(taskSnap.child("task").getValue(String.class));
+                        task.setDescription(taskSnap.child("description").getValue(String.class));
+                        task.setStatus(taskSnap.child("status").getValue(Integer.class) != null ?
+                                taskSnap.child("status").getValue(Integer.class) : 0);
+                        task.setDifficulty(taskSnap.child("difficulty").getValue(String.class));
+                        task.setStartTime(taskSnap.child("startTime").getValue(String.class));
+                        task.setDeadline(taskSnap.child("deadline").getValue(String.class));
+                        task.setExpReward(taskSnap.child("expReward").getValue(Integer.class) != null ?
+                                taskSnap.child("expReward").getValue(Integer.class) : 0);
+                        task.setCoinReward(taskSnap.child("coinReward").getValue(Integer.class) != null ?
+                                taskSnap.child("coinReward").getValue(Integer.class) : 0);
+                        task.setExpPenalty(taskSnap.child("expPenalty").getValue(Integer.class) != null ?
+                                taskSnap.child("expPenalty").getValue(Integer.class) : 0);
+                        task.setCoinPenalty(taskSnap.child("coinPenalty").getValue(Integer.class) != null ?
+                                taskSnap.child("coinPenalty").getValue(Integer.class) : 0);
+                        task.setReminderTime(taskSnap.child("reminderTime").getValue(String.class));
+                        task.setTaskType(taskSnap.child("taskType").getValue(String.class) != null ?
+                                taskSnap.child("taskType").getValue(String.class) : "Normal");
+                        task.setRepeatCount(taskSnap.child("repeatCount").getValue(Integer.class) != null ?
+                                taskSnap.child("repeatCount").getValue(Integer.class) : 1);
+                        // Store Firebase key for reference
+                        task.setFirebaseKey(taskSnap.getKey());
+                        taskList.add(task);
                     }
                     AsyncTask.execute(() -> {
                         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                         for (ToDoModel task : taskList) {
-                            db.toDoDao().insertTask(task);
+                            // Check for duplicates by ID
+                            List<ToDoModel> existingTasks = db.toDoDao().getAllTasks();
+                            boolean exists = false;
+                            for (ToDoModel existingTask : existingTasks) {
+                                if (existingTask.getId() == task.getId()) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                db.toDoDao().insertTask(task);
+                            }
                         }
                         Log.d("FirebaseSync", "Downloaded " + taskList.size() + " tasks.");
                     });
