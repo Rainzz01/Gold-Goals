@@ -26,13 +26,14 @@ import com.example.goalandgoals.Model.UserProgress;
 import com.example.goalandgoals.Utils.AppDatabase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class TaskFragment extends Fragment {
 
     private static final String TAG = "TaskFragment";
     private ToDoAdapter adapter;
     private TaskViewModel viewModel;
-
 
     @Nullable
     @Override
@@ -56,6 +57,8 @@ public class TaskFragment extends Fragment {
         viewModel.getTasks().observe(getViewLifecycleOwner(), tasks -> {
             adapter.setTasks(tasks);
             Log.d(TAG, "onCreateView: Tasks observed, count=" + (tasks != null ? tasks.size() : 0));
+            // Update user progress display after tasks change
+            loadUserDetails(view);
         });
 
         // Initialize ImageButton for new task
@@ -97,6 +100,8 @@ public class TaskFragment extends Fragment {
                     userCoinsTextView.setText(String.format("💰 Coins: %d", userProgress.getCoins()));
                     Log.d(TAG, "loadUserDetails: Loaded XP=" + userProgress.getXp() +
                             ", Coins=" + userProgress.getCoins());
+                    // Sync progress to Firebase
+                    syncUserProgressToFirebase(userProgress);
                 } else {
                     userExpTextView.setText("📊 EXP: 0");
                     userCoinsTextView.setText("💰 Coins: 0");
@@ -106,4 +111,15 @@ public class TaskFragment extends Fragment {
         });
     }
 
+    private void syncUserProgressToFirebase(UserProgress progress) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String uid = user.getUid();
+            FirebaseDatabase database = FirebaseDatabase.getInstance("https://rpgtodoapp-8e638-default-rtdb.asia-southeast1.firebasedatabase.app/");
+            DatabaseReference progressRef = database.getReference("users").child(uid).child("progress");
+            progressRef.setValue(progress)
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "User progress synced to Firebase: XP=" + progress.getXp() + ", Coins=" + progress.getCoins()))
+                    .addOnFailureListener(e -> Log.e(TAG, "Failed to sync user progress: " + e.getMessage()));
+        }
+    }
 }

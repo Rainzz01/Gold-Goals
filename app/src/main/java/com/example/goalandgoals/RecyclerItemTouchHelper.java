@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.goalandgoals.Adapter.ToDoAdapter;
+import com.example.goalandgoals.Model.ToDoModel;
 
 public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     private ToDoAdapter adapter;
@@ -25,6 +27,17 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     @Override
     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
         return false;
+    }
+
+    @Override
+    public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+        int position = viewHolder.getAdapterPosition();
+        ToDoModel item = getTaskAtPosition(position);
+        if (item != null && item.getStatus() == 1) {
+            // Disable swipe for completed tasks
+            return 0;
+        }
+        return super.getSwipeDirs(recyclerView, viewHolder);
     }
 
     @Override
@@ -88,5 +101,17 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
 
         background.draw(c);
         icon.draw(c);
+    }
+
+    private ToDoModel getTaskAtPosition(int position) {
+        try {
+            // Use reflection to access private method getTaskAtPosition
+            java.lang.reflect.Method method = ToDoAdapter.class.getDeclaredMethod("getTaskAtPosition", int.class);
+            method.setAccessible(true);
+            return (ToDoModel) method.invoke(adapter, position);
+        } catch (Exception e) {
+            Log.e("RecyclerItemTouchHelper", "Failed to get task at position: " + e.getMessage());
+            return null;
+        }
     }
 }
