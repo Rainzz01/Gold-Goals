@@ -32,7 +32,6 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class TaskFragment extends Fragment {
 
@@ -59,14 +58,15 @@ public class TaskFragment extends Fragment {
         new androidx.recyclerview.widget.ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView);
 
         // Initialize ViewModel and observe tasks
-        viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class); // Activity-scoped
         viewModel.getTasks().observe(getViewLifecycleOwner(), tasks -> {
-            if (tasks != null && !isTaskListEqual(tasks, lastTaskList)) {
-                Log.d(TAG, "onCreateView: Updating adapter with new task list: size=" + tasks.size());
+            if (tasks != null) {
+                Log.d(TAG, "onCreateView: Updating adapter with task list: size=" + tasks.size());
                 adapter.setTasks(tasks);
                 lastTaskList = new ArrayList<>(tasks);
             } else {
-                Log.d(TAG, "onCreateView: Skipping adapter update: task list unchanged");
+                Log.w(TAG, "onCreateView: Task list is null");
+                adapter.setTasks(new ArrayList<>());
             }
             // Update user progress display after tasks change
             loadUserDetails(view);
@@ -84,20 +84,6 @@ public class TaskFragment extends Fragment {
         loadUserDetails(view);
 
         return view;
-    }
-
-    private boolean isTaskListEqual(List<ToDoModel> newList, List<ToDoModel> oldList) {
-        if (newList.size() != oldList.size()) return false;
-        for (int i = 0; i < newList.size(); i++) {
-            ToDoModel newTask = newList.get(i);
-            ToDoModel oldTask = oldList.get(i);
-            if (newTask.getId() != oldTask.getId() ||
-                    newTask.getStatus() != oldTask.getStatus() ||
-                    !Objects.equals(newTask.getTask(), oldTask.getTask())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void loadUserDetails(View view) {

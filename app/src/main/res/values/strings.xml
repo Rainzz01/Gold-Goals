@@ -6,7 +6,6 @@
     <string name="nav_shop">Shop</string>
     <string name="nav_personal">Personal</string>
 
-
     <string name="difficulties">⚔️</string>
     <string name="exp_icon">📊</string>
     <string name="coin_icon">💰 </string>
@@ -21,6 +20,8 @@
         <item>Hard</item>
         <item>Extreme</item>
     </string-array>
+
+    <string name="select_task_prompt">Select a task</string>
 
     <string-array name="task_types">
         <item>Normal</item>

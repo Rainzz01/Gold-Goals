@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- 下一个工作时间 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Next Work Time (min):"
+            android:textSize="16sp"/>
+
+        <EditText
+            android:id="@+id/et_work_duration"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:inputType="number"
+            android:hint="25"/>
+    </LinearLayout>
+
+    <!-- 当前休息时间 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Break Time (min):"
+            android:textSize="16sp"/>
+
+        <EditText
+            android:id="@+id/et_break_duration"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:inputType="number"
+            android:hint="5"/>
+    </LinearLayout>
+</LinearLayout>

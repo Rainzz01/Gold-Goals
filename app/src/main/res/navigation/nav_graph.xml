@@ -24,6 +24,18 @@
         tools:layout="@layout/fragment_shop" />
 
     <fragment
+        android:id="@+id/nav_pomodoro"
+        android:name="com.example.goalandgoals.Fragment.PomodoroFragment"
+        android:label="Pomodoro"
+        tools:layout="@layout/fragment_pomodoro">
+        <action
+            android:id="@+id/action_pomodoroFragment_to_taskFragment"
+            app:destination="@id/nav_tasks"
+            app:popUpTo="@id/nav_tasks"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_settings"
         android:name="com.example.goalandgoals.Fragment.SettingFragment"
         android:label="Settings"
