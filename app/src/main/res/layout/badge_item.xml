@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="160dp"
+    android:layout_height="200dp"
+    android:layout_margin="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/badgeIcon"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="Badge icon"
+            android:src="@drawable/badge_sample" />
+
+        <TextView
+            android:id="@+id/badgeName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Badge Name"
+            android:textColor="#3E2723"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/badgeDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Badge Description"
+            android:textColor="#5D4037"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/badgeXpReward"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="XP: 100"
+            android:textColor="#FFD700"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+</FrameLayout>
+

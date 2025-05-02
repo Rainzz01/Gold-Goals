@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Gamification</string>
+    <string name="badge_hall_of_fame">Hall of Achievements</string>
+    <string name="divider">Decorative divider</string>
+    <string name="quest_continue">Continue your quest for more achievements!</string>
+    <string name="decorative_sword">Decorative sword icon</string>
+    <string name="badge_icon_desc">Achievement badge icon</string>
+    <string name="xp_format">XP: %d</string>
+</resources>
