@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_tasks">
+
+    <fragment
+        android:id="@+id/nav_tasks"
+        android:name="com.example.goalandgoals.Fragment.TaskFragment"
+        android:label="Tasks"
+        tools:layout="@layout/fragment_task" />
+
+    <fragment
+        android:id="@+id/nav_status"
+        android:name="com.example.goalandgoals.Fragment.StatusFragment"
+        android:label="Status"
+        tools:layout="@layout/fragment_status" />
+
+    <fragment
+        android:id="@+id/nav_shop"
+        android:name="com.example.goalandgoals.Fragment.ShopFragment"
+        android:label="Shop"
+        tools:layout="@layout/fragment_shop" />
+
+    <fragment
+        android:id="@+id/nav_pomodoro"
+        android:name="com.example.goalandgoals.Fragment.PomodoroFragment"
+        tools:layout="@layout/fragment_pomodoro"/>
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="com.example.goalandgoals.Fragment.SettingFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
+</navigation>

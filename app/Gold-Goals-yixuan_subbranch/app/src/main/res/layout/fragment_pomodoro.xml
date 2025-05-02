@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/background">
+
+    <Spinner
+        android:id="@+id/spinner_tasks"
+        android:layout_width="match_parent"
+        android:layout_height="103dp"
+        android:prompt="@string/select_task_prompt"/>
+
+    <!-- 工作时间输入区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Work Time (minutes):"
+            android:textSize="16sp"/>
+
+        <EditText
+            android:id="@+id/et_duration"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:hint="25"
+            android:inputType="number"/>
+    </LinearLayout>
+
+
+
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tv_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/timer_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="64sp"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btn_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Start Focus"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/work_primary"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center"
+        android:layout_marginTop="32dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_start_pause"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Start"
+            android:visibility="gone"
+            app:backgroundTint="@color/work_primary"
+            android:textColor="@color/white"
+            app:cornerRadius="24dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_skip"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Skip"
+            android:visibility="gone"
+            app:strokeColor="@color/work_primary"
+            app:strokeWidth="2dp"
+            android:textColor="@color/work_primary"
+            app:backgroundTint="@color/button_secondary"
+            app:cornerRadius="24dp"/>
+    </LinearLayout>
+</LinearLayout>
