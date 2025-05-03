@@ -2,192 +2,111 @@ package com.example.goalandgoals.Model;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-
-import java.util.Objects;
+import com.google.firebase.database.PropertyName;
 
 @Entity(tableName = "todo")
 public class ToDoModel {
     @PrimaryKey(autoGenerate = true)
     private int id;
-
-    @ColumnInfo(name = "task")
+    private String userId;
     private String task;
-
-    @ColumnInfo(name = "description")
     private String description;
-
-    @ColumnInfo(name = "status")
     private int status;
-
-    @ColumnInfo(name = "difficulty")
     private String difficulty;
-
     @ColumnInfo(name = "start_time")
     private String startTime;
-
-    @ColumnInfo(name = "deadline")
     private String deadline;
-
     @ColumnInfo(name = "exp_reward")
     private int expReward;
-
     @ColumnInfo(name = "coin_reward")
     private int coinReward;
-
     @ColumnInfo(name = "exp_penalty")
     private int expPenalty;
-
     @ColumnInfo(name = "coin_penalty")
     private int coinPenalty;
-
     @ColumnInfo(name = "reminder_time")
     private String reminderTime;
-
     @ColumnInfo(name = "task_type")
-    private String taskType = "Normal";
-
+    private String taskType;
     @ColumnInfo(name = "repeat_count")
-    private int repeatCount = 1;
-
+    private int repeatCount;
     private String firebaseKey;
 
-    // Getters and Setters
-    public int getId() {
-        return id;
+    // Constructor and getters/setters (as provided earlier)
+    public ToDoModel() {
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getTask() {
-        return task;
-    }
-
-    public void setTask(String task) {
+    @Ignore
+    public ToDoModel(String userId, String task, String description, int status, String difficulty,
+                     String startTime, String deadline, int expReward, int coinReward,
+                     int expPenalty, int coinPenalty, String reminderTime, String taskType,
+                     int repeatCount, String firebaseKey) {
+        this.userId = userId;
         this.task = task;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
         this.description = description;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
         this.status = status;
-    }
-
-    public String getDifficulty() {
-        return difficulty;
-    }
-
-    public void setDifficulty(String difficulty) {
         this.difficulty = difficulty;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(String startTime) {
         this.startTime = startTime;
-    }
-
-    public String getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(String deadline) {
         this.deadline = deadline;
-    }
-
-    public int getExpReward() {
-        return expReward;
-    }
-
-    public void setExpReward(int expReward) {
         this.expReward = expReward;
-    }
-
-    public int getCoinReward() {
-        return coinReward;
-    }
-
-    public void setCoinReward(int coinReward) {
         this.coinReward = coinReward;
-    }
-
-    public int getExpPenalty() {
-        return expPenalty;
-    }
-
-    public void setExpPenalty(int expPenalty) {
         this.expPenalty = expPenalty;
-    }
-
-    public int getCoinPenalty() {
-        return coinPenalty;
-    }
-
-    public void setCoinPenalty(int coinPenalty) {
         this.coinPenalty = coinPenalty;
-    }
-
-    public String getReminderTime() {
-        return reminderTime;
-    }
-
-    public void setReminderTime(String reminderTime) {
         this.reminderTime = reminderTime;
-    }
-
-    public String getTaskType() {
-        return taskType;
-    }
-
-    public void setTaskType(String taskType) {
         this.taskType = taskType;
-    }
-
-    public int getRepeatCount() {
-        return repeatCount;
-    }
-
-    public void setRepeatCount(int repeatCount) {
         this.repeatCount = repeatCount;
-    }
-
-    public String getFirebaseKey() {
-        return firebaseKey;
-    }
-
-    public void setFirebaseKey(String firebaseKey) {
         this.firebaseKey = firebaseKey;
     }
 
-    @Override
-    public String toString() {
-        return "ToDoModel{id=" + id + ", task=" + task + ", status=" + status + ", firebaseKey=" + firebaseKey + "}";
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ToDoModel toDoModel = (ToDoModel) o;
-        return id == toDoModel.id;
-    }
+    @PropertyName("userId")
+    public String getUserId() { return userId; }
+    @PropertyName("userId")
+    public void setUserId(String userId) { this.userId = userId; }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
+    public String getTask() { return task; }
+    public void setTask(String task) { this.task = task; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
+    public String getStartTime() { return startTime; }
+    public void setStartTime(String startTime) { this.startTime = startTime; }
+
+    public String getDeadline() { return deadline; }
+    public void setDeadline(String deadline) { this.deadline = deadline; }
+
+    public int getExpReward() { return expReward; }
+    public void setExpReward(int expReward) { this.expReward = expReward; }
+
+    public int getCoinReward() { return coinReward; }
+    public void setCoinReward(int coinReward) { this.coinReward = coinReward; }
+
+    public int getExpPenalty() { return expPenalty; }
+    public void setExpPenalty(int expPenalty) { this.expPenalty = expPenalty; }
+
+    public int getCoinPenalty() { return coinPenalty; }
+    public void setCoinPenalty(int coinPenalty) { this.coinPenalty = coinPenalty; }
+
+    public String getReminderTime() { return reminderTime; }
+    public void setReminderTime(String reminderTime) { this.reminderTime = reminderTime; }
+
+    public String getTaskType() { return taskType; }
+    public void setTaskType(String taskType) { this.taskType = taskType; }
+
+    public int getRepeatCount() { return repeatCount; }
+    public void setRepeatCount(int repeatCount) { this.repeatCount = repeatCount; }
+
+    public String getFirebaseKey() { return firebaseKey; }
+    public void setFirebaseKey(String firebaseKey) { this.firebaseKey = firebaseKey; }
 }

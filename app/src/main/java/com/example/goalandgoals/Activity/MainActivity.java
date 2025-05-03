@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Define top-level destinations for the AppBarConfiguration
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_tasks, R.id.nav_status, R.id.nav_shop, R.id.nav_settings)
+                R.id.nav_tasks, R.id.nav_status, R.id.nav_settings, R.id.nav_pomodoro)
                 .build();
 
         // Find the NavController from the NavHostFragment

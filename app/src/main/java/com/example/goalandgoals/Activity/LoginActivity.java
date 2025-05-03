@@ -3,12 +3,15 @@ package com.example.goalandgoals.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.goalandgoals.R;
+import com.example.goalandgoals.Utils.FirebaseSyncUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -17,6 +20,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText emailEditText, passwordEditText;
     private CheckBox rememberMeCheckBox;
     private Button loginButton, goToRegisterButton;
+    private ProgressBar progressBar;
     private FirebaseAuth mAuth;
     private SharedPreferences prefs;
 
@@ -33,6 +37,7 @@ public class LoginActivity extends AppCompatActivity {
         rememberMeCheckBox = findViewById(R.id.rememberMeCheckBox);
         loginButton = findViewById(R.id.loginButton);
         goToRegisterButton = findViewById(R.id.goToRegisterButton);
+        progressBar = findViewById(R.id.progressBar);
 
         // Load saved credentials
         loadCredentials();
@@ -45,6 +50,9 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(LoginActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            progressBar.setVisibility(View.VISIBLE);
+            loginButton.setEnabled(false);
 
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
@@ -67,11 +75,26 @@ public class LoginActivity extends AppCompatActivity {
                                     editor.apply();
                                 }
 
-                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                startActivity(intent);
-                                finish();
+                                // Sync tasks from Firebase
+                                FirebaseSyncUtils.syncTasksFromFirebase(LoginActivity.this, new FirebaseSyncUtils.SyncCallback() {
+                                    // In LoginActivity.java, onSyncComplete can be simplified to:
+                                    @Override
+                                    public void onSyncComplete(boolean success) {
+                                        progressBar.setVisibility(View.GONE);
+                                        loginButton.setEnabled(true);
+                                        if (success) {
+                                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                        } else {
+                                            Toast.makeText(LoginActivity.this, "Failed to sync tasks. Please try again.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
                             }
                         } else {
+                            progressBar.setVisibility(View.GONE);
+                            loginButton.setEnabled(true);
                             Toast.makeText(LoginActivity.this, "Authentication failed: " + task.getException().getMessage(),
                                     Toast.LENGTH_SHORT).show();
                         }
@@ -100,9 +123,24 @@ public class LoginActivity extends AppCompatActivity {
         super.onStart();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
+            progressBar.setVisibility(View.VISIBLE);
+            // Sync tasks from Firebase for auto-login
+            FirebaseSyncUtils.syncTasksFromFirebase(LoginActivity.this, new FirebaseSyncUtils.SyncCallback() {
+                @Override
+                public void onSyncComplete(boolean success) {
+                    // Run UI updates on the main thread
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        if (success) {
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Toast.makeText(LoginActivity.this, "Failed to sync tasks. Please log in again.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
         }
     }
 }

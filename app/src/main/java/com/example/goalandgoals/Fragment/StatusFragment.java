@@ -21,6 +21,8 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,8 +60,9 @@ public class StatusFragment extends Fragment {
     }
 
     private void loadDashboardData() {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         AsyncTask.execute(() -> {
-            List<ToDoModel> tasks = db.toDoDao().getAllTasks();
+            List<ToDoModel> tasks = db.toDoDao().getAllTasks(userId); // Filter by userId
             List<StatItem> statsList = new ArrayList<>();
             float completedPercentage = calculateCompletedPercentage(tasks);
             String punctualityRate = calculatePunctualityRate(tasks);

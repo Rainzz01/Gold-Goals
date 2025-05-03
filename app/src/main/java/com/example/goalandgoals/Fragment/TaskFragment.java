@@ -22,8 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.goalandgoals.Adapter.ToDoAdapter;
 import com.example.goalandgoals.Activity.CreateTaskActivity;
-import com.example.goalandgoals.Helper.RecyclerItemTouchHelper;
 import com.example.goalandgoals.R;
+import com.example.goalandgoals.Helper.RecyclerItemTouchHelper;
 import com.example.goalandgoals.Model.TaskViewModel;
 import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Model.UserProgress;
@@ -62,8 +62,16 @@ public class TaskFragment extends Fragment {
         itemTouchHelperCallback = new RecyclerItemTouchHelper(adapter);
         new androidx.recyclerview.widget.ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView);
 
-        // Initialize ViewModel and observe tasks
-        viewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
+        // Initialize ViewModel with current userId
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String userId = currentUser != null ? currentUser.getUid() : "";
+        viewModel = new ViewModelProvider(requireActivity(), new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new TaskViewModel(requireActivity().getApplication(), userId);
+            }
+        }).get(TaskViewModel.class);
         viewModel.getTasks().observe(getViewLifecycleOwner(), tasks -> {
             if (tasks != null) {
                 Log.d(TAG, "onCreateView: Updating adapter with task list: size=" + tasks.size());

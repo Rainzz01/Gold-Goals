@@ -55,27 +55,22 @@ public class CreateTaskActivity extends AppCompatActivity {
         db = AppDatabase.getInstance(this);
 
         // Initialize UI components
-        // Back Button
         backButton = findViewById(R.id.back_button);
-        // Card 1: Task Name, Description
         taskNameEditText = findViewById(R.id.taskNameEditText);
         descriptionEditText = findViewById(R.id.descriptionEditText);
-        // Card 2: Difficulty, EXP Reward, Coin Reward, Penalty
         difficultySpinner = findViewById(R.id.difficultySpinner);
         expRewardTextView = findViewById(R.id.expRewardTextView);
         coinRewardTextView = findViewById(R.id.coinRewardTextView);
         setCoinRewardButton = findViewById(R.id.setCoinRewardButton);
         penaltyTextView = findViewById(R.id.penaltyTextView);
-        // Card 3: Start Time, Deadline
         startTimeButton = findViewById(R.id.startTimeButton);
         deadlineButton = findViewById(R.id.deadlineButton);
         saveButton = findViewById(R.id.saveButton);
 
         // Setup Back Button
         backButton.setOnClickListener(v -> {
-            Log.d("CreateTaskActivity", "Back button clicked, finishing activity");
-            setResult(RESULT_OK); // Ensure swipe state is reset
-            finish();
+            Log.d("CreateTaskActivity", "Back button clicked, saving task and finishing activity");
+            saveTaskAndFinish(); // Save task and finish with result
         });
 
         // Setup Difficulty Spinner
@@ -238,7 +233,7 @@ public class CreateTaskActivity extends AppCompatActivity {
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
     }
 
-    private void saveTask() {
+    private void saveTaskAndFinish() {
         String taskName = taskNameEditText.getText().toString().trim();
         String description = descriptionEditText.getText().toString().trim();
         String difficulty = difficultySpinner.getSelectedItem().toString();
@@ -298,21 +293,28 @@ public class CreateTaskActivity extends AppCompatActivity {
         task.setTaskType("Normal");
         task.setRepeatCount(1);
 
-        if (id == -1) {
-            // Create new task
-            AsyncTask.execute(() -> {
+        // Set userId from FirebaseAuth
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            task.setUserId(user.getUid());
+        } else {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AsyncTask.execute(() -> {
+            if (id == -1) {
+                // Create new task
                 db.toDoDao().insertTask(task);
                 syncTaskToFirebase(task);
                 runOnUiThread(() -> {
                     Toast.makeText(CreateTaskActivity.this, "Task created", Toast.LENGTH_SHORT).show();
-                    setResult(RESULT_OK);
+                    setResult(RESULT_OK); // Signal refresh
                     finish();
                 });
-            });
-        } else {
-            // Update existing task
-            task.setId(id);
-            AsyncTask.execute(() -> {
+            } else {
+                // Update existing task
+                task.setId(id);
                 ToDoModel existingTask = db.toDoDao().getTaskById(id);
                 if (existingTask != null) {
                     task.setFirebaseKey(existingTask.getFirebaseKey());
@@ -322,11 +324,15 @@ public class CreateTaskActivity extends AppCompatActivity {
                 syncTaskToFirebase(task);
                 runOnUiThread(() -> {
                     Toast.makeText(CreateTaskActivity.this, "Task updated", Toast.LENGTH_SHORT).show();
-                    setResult(RESULT_OK);
+                    setResult(RESULT_OK); // Signal refresh
                     finish();
                 });
-            });
-        }
+            }
+        });
+    }
+
+    private void saveTask() {
+        saveTaskAndFinish(); // Reuse the save logic for the save button
     }
 
     interface TimeCallback {
