@@ -1,11 +1,10 @@
-package com.example.goalandgoals;
+package com.example.goalandgoals.Model;
 
 import android.app.Application;
 
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
-import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Utils.AppDatabase;
 
 import java.util.List;

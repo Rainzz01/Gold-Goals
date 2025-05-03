@@ -37,9 +37,9 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.example.goalandgoals.Model.ToDoModel;
-import com.example.goalandgoals.PomodoroViewModel;
+import com.example.goalandgoals.Model.PomodoroViewModel;
 import com.example.goalandgoals.R;
-import com.example.goalandgoals.TaskViewModel;
+import com.example.goalandgoals.Model.TaskViewModel;
 import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;

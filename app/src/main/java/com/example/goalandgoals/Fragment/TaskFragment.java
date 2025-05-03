@@ -18,10 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.goalandgoals.Adapter.ToDoAdapter;
-import com.example.goalandgoals.CreateTaskActivity;
+import com.example.goalandgoals.Activity.CreateTaskActivity;
 import com.example.goalandgoals.R;
-import com.example.goalandgoals.RecyclerItemTouchHelper;
-import com.example.goalandgoals.TaskViewModel;
+import com.example.goalandgoals.Helper.RecyclerItemTouchHelper;
+import com.example.goalandgoals.Model.TaskViewModel;
 import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Model.UserProgress;
 import com.example.goalandgoals.Utils.AppDatabase;

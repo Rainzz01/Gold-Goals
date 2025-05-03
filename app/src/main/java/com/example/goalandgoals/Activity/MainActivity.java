@@ -1,4 +1,4 @@
-package com.example.goalandgoals;
+package com.example.goalandgoals.Activity;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -9,12 +9,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.example.goalandgoals.Model.ToDoModel;
-import com.example.goalandgoals.Model.UserProgress;
-import com.example.goalandgoals.Utils.AppDatabase;
+import com.example.goalandgoals.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 

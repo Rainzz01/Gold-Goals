@@ -1,11 +1,11 @@
-package com.example.goalandgoals;
+package com.example.goalandgoals.Model;
 
 import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
-import com.example.goalandgoals.Model.ToDoModel;
+
 import com.example.goalandgoals.Utils.AppDatabase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

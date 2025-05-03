@@ -1,4 +1,4 @@
-package com.example.goalandgoals;
+package com.example.goalandgoals.Helper;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.goalandgoals.Adapter.ToDoAdapter;
 import com.example.goalandgoals.Model.ToDoModel;
+import com.example.goalandgoals.R;
 
 public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     private ToDoAdapter adapter;

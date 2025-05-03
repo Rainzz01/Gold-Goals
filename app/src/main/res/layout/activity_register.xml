@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:padding="24dp"
     android:background="@drawable/login_background"
-    tools:context=".RegisterActivity">
+    tools:context=".Activity.RegisterActivity">
 
     <EditText
         android:id="@+id/registerEmailEditText"

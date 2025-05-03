@@ -1,4 +1,4 @@
-package com.example.goalandgoals;
+package com.example.goalandgoals.Activity;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -19,6 +19,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.goalandgoals.Model.ToDoModel;
+import com.example.goalandgoals.R;
 import com.example.goalandgoals.Utils.AppDatabase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

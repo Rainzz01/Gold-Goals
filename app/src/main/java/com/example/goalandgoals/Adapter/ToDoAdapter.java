@@ -17,7 +17,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.goalandgoals.CreateTaskActivity;
+import com.example.goalandgoals.Activity.CreateTaskActivity;
 import com.example.goalandgoals.R;
 import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Model.UserProgress;
