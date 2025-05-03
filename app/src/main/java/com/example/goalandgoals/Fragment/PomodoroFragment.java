@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,8 +42,16 @@ import com.example.goalandgoals.R;
 import com.example.goalandgoals.TaskViewModel;
 import com.google.android.material.button.MaterialButton;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class PomodoroFragment extends Fragment {
 
@@ -57,7 +67,15 @@ public class PomodoroFragment extends Fragment {
     private MediaPlayer mediaPlayer;
     private Vibrator vibrator;
     private NotificationManager notificationManager;
+
+    private TextView tvTaskSelectorTitle;
+
+    private LinearLayout llWorkTime;
     private static final String CHANNEL_ID = "pomodoro_channel";
+
+    private TextView tvQuote;
+    private static final String API_KEY = "4nk8AESkqe/WDX6a8Iq0YQ==9HUzH55glGkzp8Vc";
+    private static final String API_URL = "https://api.api-ninjas.com/v1/quotes?category=inspirational";
 
     @Nullable
     @Override
@@ -68,6 +86,11 @@ public class PomodoroFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        tvQuote = view.findViewById(R.id.tv_quote);
+        tvTaskSelectorTitle = view.findViewById(R.id.tv_task_selector_title);
+
+        llWorkTime = view.findViewById(R.id.ll_work_time);
 
         // Request notification permission for Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -103,8 +126,62 @@ public class PomodoroFragment extends Fragment {
         setupTimerControls();
         observeViewModel();
         toggleTimerVisibility(pomodoroViewModel.getTimerRunning().getValue() != null && pomodoroViewModel.getTimerRunning().getValue());
+        if (pomodoroViewModel.getTimerRunning().getValue() != null &&
+                pomodoroViewModel.getTimerRunning().getValue()) {
+            tvQuote.setVisibility(View.VISIBLE);
+            fetchQuote();
+        }
     }
 
+
+
+    private void fetchQuote() {
+        new Thread(() -> {
+            try {
+                // 修正API URL（移除category参数）
+                URL url = new URL("https://api.api-ninjas.com/v1/quotes");
+                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+                connection.setRequestProperty("X-Api-Key", API_KEY);
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    InputStream response = connection.getInputStream();
+                    String json = new Scanner(response).useDelimiter("\\A").next();
+
+                    JSONArray jsonArray = new JSONArray(json);
+                    if (jsonArray.length() > 0) {
+                        JSONObject quoteObj = jsonArray.getJSONObject(0);
+                        final String quote = quoteObj.getString("quote") + "\n- " + quoteObj.getString("author");
+
+                        requireActivity().runOnUiThread(() -> {
+                            tvQuote.setText(quote);
+                            tvQuote.setVisibility(View.VISIBLE);
+                        });
+                    } else {
+
+                        showDefaultQuote();
+                    }
+                } else {
+                    showDefaultQuote();
+                }
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() -> {
+
+                    tvQuote.setText("Stay focused and do your best!");
+                    tvQuote.setVisibility(View.VISIBLE);
+                });
+            }
+        }).start();
+    }
+
+    private void showDefaultQuote() {
+        requireActivity().runOnUiThread(() -> {
+            tvQuote.setText("Stay focused and do your best!");
+            tvQuote.setVisibility(View.VISIBLE);
+        });
+    }
     @Override
     public void onResume() {
         super.onResume();
@@ -306,9 +383,8 @@ public class PomodoroFragment extends Fragment {
         pomodoroViewModel.setCurrentPhase(PomodoroViewModel.TimerPhase.WORK);
         pomodoroViewModel.setTimeLeftInMillis(duration);
         updateTitle("Focus Time", "Start working on " + getTaskName());
-        timerText.setTextColor(ContextCompat.getColor(requireContext(), R.color.work_primary));
-        startTimer();
-    }
+        timerText.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_blue));
+        btnStartPause.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary_blue));}
 
     private void startBreakPhase() {
         Integer cycleCount = pomodoroViewModel.getPomodoroCycleCount().getValue();
@@ -321,8 +397,8 @@ public class PomodoroFragment extends Fragment {
         pomodoroViewModel.setCurrentPhase(isLongBreak ? PomodoroViewModel.TimerPhase.LONG_BREAK : PomodoroViewModel.TimerPhase.BREAK);
         pomodoroViewModel.setTimeLeftInMillis(duration);
         updateTitle(isLongBreak ? "Long Break" : "Break Time", "Relax~");
-        timerText.setTextColor(ContextCompat.getColor(requireContext(), R.color.break_primary));
-        startTimer();
+        timerText.setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_grey));
+        btnSkip.setStrokeColor(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.secondary_grey)));
     }
 
     private void updatePhaseUI() {
@@ -548,8 +624,9 @@ public class PomodoroFragment extends Fragment {
 
     private void toggleSelectionVisibility(boolean show) {
         int visibility = show ? View.VISIBLE : View.GONE;
+        tvTaskSelectorTitle.setVisibility(visibility);
         spinnerTasks.setVisibility(visibility);
-        etDuration.setVisibility(visibility);
+        llWorkTime.setVisibility(visibility);
         btnConfirm.setVisibility(visibility);
     }
 
@@ -560,6 +637,15 @@ public class PomodoroFragment extends Fragment {
         timerText.setVisibility(visibility);
         btnStartPause.setVisibility(visibility);
         btnSkip.setVisibility(visibility);
+
+
+        if (show) {
+            tvQuote.setVisibility(View.VISIBLE);
+            fetchQuote();
+        } else {
+            tvQuote.setVisibility(View.GONE);
+            tvQuote.setText(""); // Clear previous text
+        }
     }
 
     @Override

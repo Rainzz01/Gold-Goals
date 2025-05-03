@@ -1,31 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-
-
-    <color name="work_phase">#FF5722</color> <!-- 橙色 -->
-    <color name="break_phase">#4CAF50</color> <!-- 绿色 -->
-
-    <!-- 背景与基础色 -->
+    <color name="work_phase">#FF5722</color>
+    <!--  橙色  -->
+    <color name="break_phase">#4CAF50</color>
+    <!--  绿色  -->
+    <!--  背景与基础色  -->
     <color name="background">#FFF5F5F5</color>
-
-    <!-- 工作阶段配色 -->
-    <color name="work_primary">#FF6D4C41</color> <!-- 深陶土色 -->
-    <color name="work_secondary">#FFFBE9E7</color> <!-- 浅陶土色 -->
-
-    <!-- 休息阶段配色 -->
-    <color name="break_primary">#4CAF50</color> <!-- 柔和绿色 -->
-    <color name="break_secondary">#E8F5E9</color> <!-- 浅绿色 -->
-
-    <!-- 文本与按钮 -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
+    <!--  工作阶段配色  -->
+    <color name="work_primary">#FF6D4C41</color>
+    <!--  深陶土色  -->
+    <color name="work_secondary">#FFFBE9E7</color>
+    <!--  浅陶土色  -->
+    <!--  休息阶段配色  -->
+    <color name="break_primary">#4CAF50</color>
+    <!--  柔和绿色  -->
+    <color name="break_secondary">#E8F5E9</color>
+    <!--  浅绿色  -->
     <color name="button_secondary">#FFFFFFFF</color>
-
-
-    <!-- 基础色系 -->
+    <!--  基础色系  -->
     <color name="primary_blue">#2196F3</color>
     <color name="primary_green">#4CAF50</color>
     <color name="accent_orange">#FF9800</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_grey">#607D8B</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="background_dark">#FAFAFA</color>
+    <color name="background_light">#FFFFFF</color>
 </resources>
