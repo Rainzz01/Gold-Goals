@@ -18,7 +18,9 @@ import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.R;
 
 public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
+    private static final String TAG = "RecyclerItemTouchHelper";
     private ToDoAdapter adapter;
+    private int lastSwipedPosition = -1;
 
     public RecyclerItemTouchHelper(ToDoAdapter adapter) {
         super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
@@ -44,6 +46,9 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     @Override
     public void onSwiped(@NonNull final RecyclerView.ViewHolder viewHolder, int direction) {
         final int position = viewHolder.getAdapterPosition();
+        lastSwipedPosition = position;
+        Log.d(TAG, "onSwiped: Position=" + position + ", Direction=" + (direction == ItemTouchHelper.LEFT ? "LEFT" : "RIGHT"));
+
         if (direction == ItemTouchHelper.LEFT) {
             AlertDialog.Builder builder = new AlertDialog.Builder(adapter.getContext());
             builder.setTitle("Delete Task");
@@ -51,10 +56,15 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
             builder.setPositiveButton("Confirm",
                     (dialog, which) -> adapter.deleteItem(position));
             builder.setNegativeButton(android.R.string.cancel,
-                    (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
+                    (dialog, which) -> {
+                        adapter.notifyItemChanged(position);
+                        lastSwipedPosition = -1; // Reset after cancel
+                    });
             AlertDialog dialog = builder.create();
             dialog.show();
         } else {
+            // Clear swipe state before navigating to edit
+            clearView(adapter.getRecyclerView(), viewHolder);
             adapter.editItem(position);
         }
     }
@@ -69,15 +79,19 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
         View itemView = viewHolder.itemView;
         int backgroundCornerOffset = 20;
 
-        if (dX > 0) {
+        if (dX > 0) { // Swiping to the right
             icon = ContextCompat.getDrawable(adapter.getContext(), R.drawable.ic_baseline_edit);
             background = new ColorDrawable(Color.YELLOW);
-        } else {
+        } else { // Swiping to the left
             icon = ContextCompat.getDrawable(adapter.getContext(), R.drawable.ic_baseline_delete);
             background = new ColorDrawable(Color.RED);
         }
 
-        assert icon != null;
+        if (icon == null) {
+            Log.e(TAG, "Icon is null");
+            return;
+        }
+
         int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
         int iconTop = itemView.getTop() + (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
         int iconBottom = iconTop + icon.getIntrinsicHeight();
@@ -96,7 +110,7 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
 
             background.setBounds(itemView.getRight() + ((int) dX) - backgroundCornerOffset,
                     itemView.getTop(), itemView.getRight(), itemView.getBottom());
-        } else { // view is unSwiped
+        } else { // View is unSwiped
             background.setBounds(0, 0, 0, 0);
         }
 
@@ -111,8 +125,24 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
             method.setAccessible(true);
             return (ToDoModel) method.invoke(adapter, position);
         } catch (Exception e) {
-            Log.e("RecyclerItemTouchHelper", "Failed to get task at position: " + e.getMessage());
+            Log.e(TAG, "Failed to get task at position: " + e.getMessage());
             return null;
         }
+    }
+
+    public void resetSwipeState(RecyclerView recyclerView) {
+        if (lastSwipedPosition != -1) {
+            Log.d(TAG, "resetSwipeState: Resetting swipe for position=" + lastSwipedPosition);
+            adapter.notifyItemChanged(lastSwipedPosition);
+            lastSwipedPosition = -1;
+        }
+    }
+
+    private RecyclerView getRecyclerView() {
+        RecyclerView recyclerView = adapter.getRecyclerView();
+        if (recyclerView == null) {
+            Log.w(TAG, "getRecyclerView: RecyclerView is null, adapter not attached");
+        }
+        return recyclerView;
     }
 }

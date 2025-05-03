@@ -1,5 +1,6 @@
 package com.example.goalandgoals.Activity;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,8 +28,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
 
@@ -36,10 +40,11 @@ public class CreateTaskActivity extends AppCompatActivity {
     private EditText taskNameEditText, descriptionEditText;
     private Spinner difficultySpinner;
     private TextView expRewardTextView, coinRewardTextView, penaltyTextView;
-    private Button setCoinRewardButton, startTimeButton, deadlineButton, reminderTimeButton, saveButton;
+    private Button setCoinRewardButton, startTimeButton, deadlineButton, saveButton;
+    private ImageButton backButton;
     private AppDatabase db;
     private int coinReward = 0;
-    private String startTime, deadline, reminderTime;
+    private String startTime, deadline;
     private int id = -1;
 
     @Override
@@ -49,22 +54,29 @@ public class CreateTaskActivity extends AppCompatActivity {
 
         db = AppDatabase.getInstance(this);
 
+        // Initialize UI components
+        // Back Button
+        backButton = findViewById(R.id.back_button);
         // Card 1: Task Name, Description
         taskNameEditText = findViewById(R.id.taskNameEditText);
         descriptionEditText = findViewById(R.id.descriptionEditText);
-
         // Card 2: Difficulty, EXP Reward, Coin Reward, Penalty
         difficultySpinner = findViewById(R.id.difficultySpinner);
         expRewardTextView = findViewById(R.id.expRewardTextView);
         coinRewardTextView = findViewById(R.id.coinRewardTextView);
         setCoinRewardButton = findViewById(R.id.setCoinRewardButton);
         penaltyTextView = findViewById(R.id.penaltyTextView);
-
-        // Card 3: Start Time, Deadline, Reminder Time
+        // Card 3: Start Time, Deadline
         startTimeButton = findViewById(R.id.startTimeButton);
         deadlineButton = findViewById(R.id.deadlineButton);
-        reminderTimeButton = findViewById(R.id.reminderTimeButton);
         saveButton = findViewById(R.id.saveButton);
+
+        // Setup Back Button
+        backButton.setOnClickListener(v -> {
+            Log.d("CreateTaskActivity", "Back button clicked, finishing activity");
+            setResult(RESULT_OK); // Ensure swipe state is reset
+            finish();
+        });
 
         // Setup Difficulty Spinner
         ArrayAdapter<CharSequence> difficultyAdapter = ArrayAdapter.createFromResource(this,
@@ -88,7 +100,6 @@ public class CreateTaskActivity extends AppCompatActivity {
         // Setup Time Pickers
         startTimeButton.setOnClickListener(v -> showDateTimePicker(startTimeButton, time -> startTime = time));
         deadlineButton.setOnClickListener(v -> showDateTimePicker(deadlineButton, time -> deadline = time));
-        reminderTimeButton.setOnClickListener(v -> showDateTimePicker(reminderTimeButton, time -> reminderTime = time));
 
         // Load existing task data if editing
         Intent intent = getIntent();
@@ -104,10 +115,8 @@ public class CreateTaskActivity extends AppCompatActivity {
             coinRewardTextView.setText(String.format(Locale.getDefault(), "Coin Reward: %d", coinReward));
             startTime = intent.getStringExtra("start_time");
             deadline = intent.getStringExtra("deadline");
-            reminderTime = intent.getStringExtra("reminder_time");
             startTimeButton.setText(startTime != null ? startTime : "Set Start Time");
             deadlineButton.setText(deadline != null ? deadline : "Set Deadline");
-            reminderTimeButton.setText(reminderTime != null ? reminderTime : "Set Reminder Time (Optional)");
             updateExpRewardAndPenalty(difficultyIndex + 1); // Update penalties for existing task
         } else {
             setTitle("Create Task");
@@ -234,6 +243,7 @@ public class CreateTaskActivity extends AppCompatActivity {
         String description = descriptionEditText.getText().toString().trim();
         String difficulty = difficultySpinner.getSelectedItem().toString();
 
+        // Validate inputs
         if (taskName.isEmpty()) {
             Toast.makeText(this, "Task name is required", Toast.LENGTH_SHORT).show();
             return;
@@ -243,6 +253,22 @@ public class CreateTaskActivity extends AppCompatActivity {
             return;
         }
 
+        // Validate deadline is not earlier than start time
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        try {
+            Date startDate = sdf.parse(startTime);
+            Date deadlineDate = sdf.parse(deadline);
+            if (deadlineDate != null && startDate != null && deadlineDate.before(startDate)) {
+                Toast.makeText(this, "Deadline cannot be earlier than start time", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (ParseException e) {
+            Toast.makeText(this, "Invalid date format", Toast.LENGTH_SHORT).show();
+            Log.e("CreateTaskActivity", "Date parsing error: " + e.getMessage());
+            return;
+        }
+
+        // Calculate rewards and penalties
         int expReward;
         double penaltyMultiplier;
         int level = difficultySpinner.getSelectedItemPosition() + 1;
@@ -257,6 +283,7 @@ public class CreateTaskActivity extends AppCompatActivity {
         int expPenalty = (int) (expReward * penaltyMultiplier);
         int coinPenalty = (int) (coinReward * penaltyMultiplier);
 
+        // Create or update task
         ToDoModel task = new ToDoModel();
         task.setTask(taskName);
         task.setDescription(description);
@@ -268,7 +295,6 @@ public class CreateTaskActivity extends AppCompatActivity {
         task.setCoinReward(coinReward);
         task.setExpPenalty(expPenalty);
         task.setCoinPenalty(coinPenalty);
-        task.setReminderTime(reminderTime);
         task.setTaskType("Normal");
         task.setRepeatCount(1);
 
@@ -286,14 +312,13 @@ public class CreateTaskActivity extends AppCompatActivity {
         } else {
             // Update existing task
             task.setId(id);
-            // Retrieve existing firebaseKey
             AsyncTask.execute(() -> {
                 ToDoModel existingTask = db.toDoDao().getTaskById(id);
                 if (existingTask != null) {
                     task.setFirebaseKey(existingTask.getFirebaseKey());
                 }
                 db.toDoDao().updateTask(id, taskName, description, difficulty, startTime, deadline,
-                        expReward, coinReward, expPenalty, coinPenalty, reminderTime, "Normal", 1);
+                        expReward, coinReward, expPenalty, coinPenalty, null, "Normal", 1);
                 syncTaskToFirebase(task);
                 runOnUiThread(() -> {
                     Toast.makeText(CreateTaskActivity.this, "Task updated", Toast.LENGTH_SHORT).show();
@@ -331,7 +356,6 @@ public class CreateTaskActivity extends AppCompatActivity {
                 tasksRef.child(newTaskKey).setValue(task)
                         .addOnSuccessListener(aVoid -> {
                             Log.d("FirebaseSync", "Task successfully uploaded: " + task.getTask());
-                            // Update local database with firebaseKey
                             AsyncTask.execute(() -> {
                                 db.toDoDao().updateFirebaseKey(task.getId(), newTaskKey);
                             });
@@ -344,6 +368,4 @@ public class CreateTaskActivity extends AppCompatActivity {
             Log.e("FirebaseSync", "User is null, cannot sync to Firebase.");
         }
     }
-
-
 }

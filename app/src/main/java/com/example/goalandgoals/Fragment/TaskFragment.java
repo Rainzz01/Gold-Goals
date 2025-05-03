@@ -1,5 +1,8 @@
 package com.example.goalandgoals.Fragment;
 
+import static android.app.Activity.RESULT_OK;
+
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -19,8 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.goalandgoals.Adapter.ToDoAdapter;
 import com.example.goalandgoals.Activity.CreateTaskActivity;
-import com.example.goalandgoals.R;
 import com.example.goalandgoals.Helper.RecyclerItemTouchHelper;
+import com.example.goalandgoals.R;
 import com.example.goalandgoals.Model.TaskViewModel;
 import com.example.goalandgoals.Model.ToDoModel;
 import com.example.goalandgoals.Model.UserProgress;
@@ -36,9 +39,11 @@ import java.util.List;
 public class TaskFragment extends Fragment {
 
     private static final String TAG = "TaskFragment";
+    private static final int REQUEST_CODE_EDIT_TASK = 100;
     private ToDoAdapter adapter;
     private TaskViewModel viewModel;
     private List<ToDoModel> lastTaskList = new ArrayList<>();
+    private RecyclerItemTouchHelper itemTouchHelperCallback;
 
     @Nullable
     @Override
@@ -54,11 +59,11 @@ public class TaskFragment extends Fragment {
         Log.d(TAG, "onCreateView: RecyclerView adapter set");
 
         // Set up ItemTouchHelper for swipe actions
-        RecyclerItemTouchHelper itemTouchHelperCallback = new RecyclerItemTouchHelper(adapter);
+        itemTouchHelperCallback = new RecyclerItemTouchHelper(adapter);
         new androidx.recyclerview.widget.ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView);
 
         // Initialize ViewModel and observe tasks
-        viewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class); // Activity-scoped
+        viewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
         viewModel.getTasks().observe(getViewLifecycleOwner(), tasks -> {
             if (tasks != null) {
                 Log.d(TAG, "onCreateView: Updating adapter with task list: size=" + tasks.size());
@@ -76,7 +81,7 @@ public class TaskFragment extends Fragment {
         ImageButton newQuestButton = view.findViewById(R.id.button_new_quest);
         newQuestButton.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), CreateTaskActivity.class);
-            startActivity(intent);
+            startActivityForResult(intent, REQUEST_CODE_EDIT_TASK);
             Log.d(TAG, "onCreateView: New quest button clicked");
         });
 
@@ -84,6 +89,15 @@ public class TaskFragment extends Fragment {
         loadUserDetails(view);
 
         return view;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_EDIT_TASK && resultCode == RESULT_OK) {
+            Log.d(TAG, "onActivityResult: Edit task completed, resetting swipe state");
+            itemTouchHelperCallback.resetSwipeState(adapter.getRecyclerView());
+        }
     }
 
     private void loadUserDetails(View view) {
